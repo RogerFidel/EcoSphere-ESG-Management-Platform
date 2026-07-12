@@ -1,0 +1,232 @@
+name: 🌿 GreenQuest CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  # ─── Backend Tests ──────────────────────────────────────────────────────────
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: greenquest
+          POSTGRES_PASSWORD: greenquest_test
+          POSTGRES_DB: greenquest_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install backend dependencies
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        run: npm run lint --if-present
+
+      - name: 🧪 Run unit tests
+        run: npm test -- --coverage --testPathPattern=tests/unit
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-ci
+          DB_USER: greenquest
+          DB_PASS: greenquest_test
+          DB_NAME: greenquest_test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_URL: redis://localhost:6379
+
+      - name: 🔗 Run integration tests
+        run: npm test -- --coverage --testPathPattern=tests/integration
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-ci
+          DB_USER: greenquest
+          DB_PASS: greenquest_test
+          DB_NAME: greenquest_test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_URL: redis://localhost:6379
+
+      - name: 📊 Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: github.event_name == 'push'
+        with:
+          flags: backend
+          directory: ./backend/coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ─── Frontend Build Check ───────────────────────────────────────────────────
+  test-frontend:
+    name: 🎨 Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install frontend dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build
+        env:
+          VITE_API_URL: /api/v1
+
+      - name: 📁 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+  # ─── Security Audit ─────────────────────────────────────────────────────────
+  security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Audit backend dependencies
+        working-directory: ./backend
+        run: npm audit --audit-level=high --production
+
+      - name: 🔍 Audit frontend dependencies
+        working-directory: ./frontend
+        run: npm audit --audit-level=high --production
+
+  # ─── Docker Build & Push (main branch only) ─────────────────────────────────
+  build-and-push:
+    name: 🐳 Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, security-audit]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract Docker metadata (backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+
+      - name: 🏷️ Extract Docker metadata (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+
+      - name: ⚡ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: 🎨 Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  # ─── Deploy Notification ────────────────────────────────────────────────────
+  notify:
+    name: 📣 Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: always() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: ✅ Deployment Success
+        if: needs.build-and-push.result == 'success'
+        run: |
+          echo "🌿 GreenQuest deployed successfully!"
+          echo "Backend image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest"
+          echo "Frontend image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest"
+
+      - name: ❌ Deployment Failed
+        if: needs.build-and-push.result == 'failure'
+        run: |
+          echo "❌ GreenQuest deployment failed. Check logs above."
+          exit 1

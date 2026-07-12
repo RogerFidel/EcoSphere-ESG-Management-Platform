@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gq_postgres_dev
+    environment:
+      POSTGRES_USER: greenquest
+      POSTGRES_PASSWORD: greenquest_dev
+      POSTGRES_DB: greenquest_dev
+    ports:
+      - "5432:5432"
+    networks:
+      - gq_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenquest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: gq_redis_dev
+    command: redis-server --appendonly no
+    ports:
+      - "6379:6379"
+    networks:
+      - gq_dev_network
+
+networks:
+  gq_dev_network:
+    driver: bridge
