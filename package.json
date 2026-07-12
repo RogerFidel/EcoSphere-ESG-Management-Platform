@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "oddo-ps",
   "private": true,
   "version": "0.0.0",
@@ -33,5 +34,18 @@
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
+=======
+  "name": "esg-analytics-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+>>>>>>> 38f20203a4ad4c828eb398d223d5d14031391943
   }
 }

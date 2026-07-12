@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!doctype html>
 <html lang="en">
   <head>
@@ -10,4 +11,152 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESG Command Portal – Analytics & Reporting | GreenVista Corp</title>
+  <meta name="description" content="Enterprise-grade ESG Analytics and Reporting Platform featuring real-time Environmental, Social, and Governance dashboards, KPI tracking, compliance analytics, reward analytics, badge analytics, challenge analytics, and regulatory report exports.">
+  <meta name="keywords" content="ESG, sustainability, environmental, social, governance, CSR, carbon, compliance, analytics, dashboard">
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ── Sidebar Navigation ─────────────────────────────── -->
+    <aside class="print-hide" id="sidebar">
+      <div class="logo-container">
+        <div class="logo-icon">🌿</div>
+        <div class="logo-text">ESG Portal</div>
+      </div>
+
+      <nav aria-label="Main Navigation" id="main-nav">
+
+        <!-- Dashboards -->
+        <div class="nav-section-title">Dashboards</div>
+        <ul>
+          <li><button class="nav-link active" data-view="overall-dashboard"    data-pillar="overall"        id="nav-overall">    <i>📊</i> Overall ESG         </button></li>
+          <li><button class="nav-link"         data-view="env-dashboard"       data-pillar="environmental"  id="nav-env">        <i>🌱</i> Environmental (E)   </button></li>
+          <li><button class="nav-link"         data-view="soc-dashboard"       data-pillar="social"         id="nav-soc">        <i>🤝</i> Social (S)          </button></li>
+          <li><button class="nav-link"         data-view="gov-dashboard"       data-pillar="governance"     id="nav-gov">        <i>🛡️</i> Governance (G)     </button></li>
+          <li><button class="nav-link"         data-view="dept-dashboard"                                   id="nav-dept">       <i>🏢</i> Departments         </button></li>
+          <li><button class="nav-link"         data-view="emp-dashboard"                                    id="nav-emp">        <i>👤</i> Employees           </button></li>
+          <li><button class="nav-link"         data-view="leader-dashboard"                                 id="nav-leader">     <i>👑</i> Leaderboard         </button></li>
+          <li><button class="nav-link"         data-view="analytics-dashboard"                              id="nav-analytics">  <i>📈</i> Analytics           </button></li>
+        </ul>
+
+        <!-- Analytics Deep-Dive -->
+        <div class="nav-section-title">Analytics</div>
+        <ul>
+          <li><button class="nav-link" data-view="challenge-analytics"  id="nav-challenge-analytics"> <i>🎯</i> Challenge Analytics  </button></li>
+          <li><button class="nav-link" data-view="compliance-analytics" id="nav-compliance-analytics"><i>✅</i> Compliance Analytics </button></li>
+          <li><button class="nav-link" data-view="reward-analytics"     id="nav-reward-analytics">    <i>🎁</i> Reward Analytics     </button></li>
+          <li><button class="nav-link" data-view="badge-analytics"      id="nav-badge-analytics">     <i>🏅</i> Badge Analytics      </button></li>
+        </ul>
+
+        <!-- Reports -->
+        <div class="nav-section-title">Reports</div>
+        <ul>
+          <li><button class="nav-link" data-view="summary-report" id="nav-rep-summary"> <i>📄</i> ESG Summary Report   </button></li>
+          <li><button class="nav-link" data-view="env-report"     id="nav-rep-env">     <i>🍀</i> Environmental Report </button></li>
+          <li><button class="nav-link" data-view="soc-report"     id="nav-rep-soc">     <i>🤝</i> Social Report        </button></li>
+          <li><button class="nav-link" data-view="gov-report"     id="nav-rep-gov">     <i>⚖️</i> Governance Report    </button></li>
+          <li><button class="nav-link" data-view="custom-report"  id="nav-rep-builder"> <i>⚙️</i> Custom Report Builder</button></li>
+        </ul>
+
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-label">GreenVista Corp · FY 2026</div>
+        <div class="sidebar-footer-sub">ESG Command Portal v2.0</div>
+      </div>
+    </aside>
+
+    <!-- ── Main Content ───────────────────────────────────── -->
+    <main>
+
+      <!-- Page Header -->
+      <header>
+        <div class="header-title-area">
+          <h1 id="active-page-title">Overall ESG Dashboard</h1>
+          <p id="active-page-desc">Consolidated ESG Pillar Performance and Target Progress</p>
+        </div>
+        <div class="header-actions print-hide">
+          <div class="period-switcher" id="period-switcher">
+            <button class="period-btn active" data-freq="yearly"    id="freq-yearly">   Yearly   </button>
+            <button class="period-btn"         data-freq="quarterly" id="freq-quarterly"> Quarterly </button>
+            <button class="period-btn"         data-freq="monthly"   id="freq-monthly">  Monthly   </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Unified Filter Bar -->
+      <section class="filter-bar print-hide" aria-label="Global Filter Controls">
+
+        <div class="filter-group" id="fg-period">
+          <label for="filter-period">Period</label>
+          <select id="filter-period" class="filter-control">
+            <option value="">All Periods</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-dept">Department</label>
+          <select id="filter-dept" class="filter-control">
+            <option value="">All Departments</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-employee">Employee</label>
+          <select id="filter-employee" class="filter-control">
+            <option value="">All Employees</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-challenge">CSR Challenge</label>
+          <select id="filter-challenge" class="filter-control">
+            <option value="">All Challenges</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-category">Category</label>
+          <select id="filter-category" class="filter-control">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-module">Governance Module</label>
+          <select id="filter-module" class="filter-control">
+            <option value="">All Modules</option>
+          </select>
+        </div>
+
+      </section>
+
+      <!-- Dashboard / Report Content -->
+      <section id="dashboard-content" aria-label="Active View Content">
+        <!-- Dynamically populated by JS -->
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Scripts: Load order matters -->
+  <script src="data.js"></script>
+  <script src="calculations.js"></script>
+  <script src="dashboards.js"></script>
+  <script src="reports.js"></script>
+  <script src="app.js"></script>
+
+</body>
+>>>>>>> 38f20203a4ad4c828eb398d223d5d14031391943
 </html>
